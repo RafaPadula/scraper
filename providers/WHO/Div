@@ -1,0 +1,40 @@
+import requests
+from bs4 import BeautifulSoup
+import time
+
+url = 'https://www.cdc.gov/niosh/index.htm'
+
+try:
+    # Obtenha o conteúdo da página
+    response = requests.get(url)
+    response.raise_for_status()  # Isso vai gerar um erro para respostas de erro HTTP
+except requests.exceptions.HTTPError as errh:
+    print(f"Erro HTTP: {errh}")
+except requests.exceptions.ConnectionError as errc:
+    print(f"Erro de Conexão: {errc}")
+except requests.exceptions.Timeout as errt:
+    print(f"Erro de Timeout: {errt}")
+except requests.exceptions.RequestException as err:
+    print(f"Erro OOps: Algo Mais: {err}")
+else:
+    # Analise o HTML da página
+    soup = BeautifulSoup(response.text, 'html.parser')
+    
+    # Encontre todas as divs ou links com informações relacionadas à COVID
+       relevant_divs = soup.find_all('div', string=lambda text: text and 'COVID' in text)
+    for div in relevant_divs:
+        # Aqui, você pode ajustar a lógica para lidar com estruturas aninhadas ou atributos específicos
+        print(div.get_text(strip=True))
+        # Para links aninhados em divs, por exemplo:
+        for a in div.find_all('a', href=True):
+            print(a['href'])
+    
+    # Exemplo de navegação em estruturas aninhadas e complexas
+    complex_structures = soup.find_all('div', class_='example-class')
+    for structure in complex_structures:
+        nested_div = structure.find('div', class_='nested-class')
+        if nested_div:
+            print(nested_div.get_text(strip=True))
+
+    # Implemente limitação de taxa se estiver fazendo múltiplas requisições em loop
+    time.sleep(1)  # Pausa de 1 segundo entre as requisições para evitar bloqueio por muitas solicitações
