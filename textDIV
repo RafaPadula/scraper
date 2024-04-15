@@ -1,0 +1,34 @@
+import requests
+from bs4 import BeautifulSoup
+import time
+
+url = 'https://www.osha.gov/coronavirus/safework'
+
+try:
+    response = requests.get(url)
+    response.raise_for_status()  # Garante tratamento de status de erro HTTP
+except requests.exceptions.HTTPError as errh:
+    print(f"Erro HTTP: {errh}")
+except requests.exceptions.ConnectionError as errc:
+    print(f"Erro de Conexão: {errc}")
+except requests.exceptions.Timeout as errt:
+    print(f"Erro de Timeout: {errt}")
+except requests.exceptions.RequestException as err:
+    print(f"Erro OOps: Algo Mais: {err}")
+else:
+    soup = BeautifulSoup(response.text, 'html.parser')
+
+    # Buscar todas as 'divs' que contêm a palavra "COVID" no texto
+    covid_divs = soup.find_all('div', string=lambda text: text and 'COVID' in text)
+    for div in covid_divs:
+        # Imprime o texto dentro da div que contém "COVID"
+        print("Texto da Div com COVID:", div.get_text(strip=True))
+
+        # Para capturar elementos imediatamente aninhados ou após essa div que contêm "COVID"
+        next_elements = div.find_all_next(['div', 'p'])  # Busca por divs ou parágrafos seguintes
+        for element in next_elements:
+            if 'COVID' in element.get_text():
+                print("Elemento Relacionado com COVID:", element.get_text(strip=True))
+    
+    # Limitação de taxa para evitar bloqueio do IP
+    time.sleep(1)
