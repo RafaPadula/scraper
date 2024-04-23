@@ -1,0 +1,50 @@
+import requests
+from bs4 import BeautifulSoup
+import time
+import random
+
+url = 'https://www.osha.gov/coronavirus/safework'
+
+# Lista de User-Agents para simular diferentes navegadores
+user_agents = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+    # Add more user agents as needed
+]
+
+try:
+    headers = {
+        "User-Agent": random.choice(user_agents),
+        "Accept-Language": "en-US,en;q=0.5",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Connection": "keep-alive"
+    }
+
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()
+
+    soup = BeautifulSoup(response.text, 'html.parser')
+
+    # Tente encontrar divs com COVID primeiro
+    relevant_divs = soup.find_all('div', string=lambda text: text and 'COVID' in text)
+    if relevant_divs:
+        for div in relevant_divs:
+            print(div.get_text(strip=True))
+            for a in div.find_all('a', href=True):
+                print(f"Link: {a['href']} - Text: {a.get_text(strip=True)}")
+    else:
+        # Se não encontrar divs específicas, imprime algum conteúdo geral da página
+        print("Nenhuma div relevante encontrada com 'COVID'. Exibindo texto geral da página.")
+        paragraphs = soup.find_all('p')  # Encontre todos os parágrafos
+        for paragraph in paragraphs:
+            print(paragraph.get_text(strip=True))
+
+    time.sleep(1)  # Pausa de 1 segundo
+
+except requests.exceptions.HTTPError as errh:
+    print(f"Erro HTTP: {errh}")
+except requests.exceptions.ConnectionError as errc:
+    print(f"Erro de Conexão: {errc}")
+except requests.exceptions.Timeout as errt:
+    print(f"Erro de Timeout: {errt}")
+except requests.exceptions.RequestException as err:
+    print(f"Erro OOps: Algo Mais: {err}")
